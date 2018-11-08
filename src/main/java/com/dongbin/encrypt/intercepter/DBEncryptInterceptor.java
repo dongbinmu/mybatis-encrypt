@@ -14,8 +14,7 @@ import org.apache.ibatis.session.RowBounds;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.Properties;
 
 @Intercepts({@Signature(type = Executor.class, method = "update", args = {MappedStatement.class, Object.class}),
@@ -38,13 +37,17 @@ public class DBEncryptInterceptor implements Interceptor {
          * decrypt
          */
         Object returnValue = invocation.proceed();
-
-        if (returnValue instanceof ArrayList) {
-            List<?> list = (List<?>) returnValue;
-            list.forEach(o -> handle(o, true));
-        } else {
-            handle(returnValue, true);
+        if ("query".equalsIgnoreCase(invocation.getMethod().getName())) {
+            if (returnValue instanceof Collection) {
+                Collection collection = (Collection) returnValue;
+                for (Object o : collection) {
+                    handle(o, true);
+                }
+            } else {
+                handle(returnValue, true);
+            }
         }
+
 
         return returnValue;
     }
